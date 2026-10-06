@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Text-to-SQL with Guardrails</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> 
+</head>
+<body class="app-body">
+  <header>
+    <h1>AI-Generated Text-to-PostgreSQL with Guardrails</h1>
+    <nav><span>{{ current_user.email.split('@')[0] }}</span> &middot; <a href="{{ url_for('logout') }}">Logout</a></nav>
+  </header>
+
+  <main class="console">
+    <section class="panel query-panel">
+      <label for="question">Describe the question you want answered</label>
+      <textarea id="question" placeholder="e.g. show me the 5 highest-value orders from Malaysia this year" rows="6"></textarea>
+      <button id="run-btn" type="button">Generate &amp; Run</button>
+
+      <div class="history-header">History</div>
+      <ul id="history"></ul>
+    </section>
+
+    <section class="panel result-panel-outer">
+      <div id="result">
+        <p class="placeholder">Your generated SQL and results will appear here.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+    "editor.quickSuggestions": {
+        "other": "on",
+        "comments": "on",
+        "strings": "on"
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.wordBasedSuggestions": "allDocuments",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportAttributeAccessIssue": "none",
+        "reportCallIssue": "none",
+        "reportOptionalMemberAccess": "none"
+    },
+    "python.analysis.inlayHints.pytestParameters": true,
+    "js/ts.inlayHints.parameterTypes.enabled": true,
+    "js/ts.inlayHints.parameterNames.enabled": "all",
+    "C_Cpp.inlayHints.parameterNames.enabled": true
+}

@@ -1,0 +1,297 @@
+/* ==================== RESET ==================== */
+* { box-sizing: border-box; }
+/* ==================== END RESET ==================== */
+
+/* ==================== PAGE BACKGROUND ==================== */
+html { height: 100%; }
+
+body {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background: url(bg.gif);
+    margin: 0;
+    min-height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    width: 100%;
+}
+
+body:has(.login-card) {
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* The console (app) page uses a dark canvas instead of the gradient -
+   the gradient is reserved for login and for buttons, matching the
+   look of a data/SQL tool rather than a chat app. */
+body.app-body {
+    background: url(bg.gif);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+/* ==================== END PAGE BACKGROUND ==================== */
+
+/* ==================== LOGIN PAGE INPUT SPACING FIX ==================== */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    outline: none;
+    display: block;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: #764ba2;
+}
+/* ==================== END LOGIN PAGE INPUT SPACING FIX ==================== */
+
+/* ==================== LOGIN PAGE ==================== */
+.login-card {
+    width: 580px;
+    margin: auto;
+    background: #fff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 28px;
+    border-radius: 16px;
+}
+
+#form-title { margin-bottom: 20px; text-align: center; }
+
+.login-card input { min-height: 46px; margin-bottom: 12px; }
+
+.password-field { margin-top: 0; }
+
+.submit-btn,
+.google-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+}
+
+.submit-btn {
+    margin-top: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    font-weight: 600;
+    padding: 12px 20px;
+}
+
+.submit-btn:hover { opacity: 0.9; }
+
+.google-btn {
+    background: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 12px 20px;
+    line-height: 1.2;
+}
+
+.error-msg { color: #d33; text-align: center; margin-top: 10px; font-size: 0.9rem; }
+
+.toggle-text { text-align: center; margin-top: 14px; }
+
+.toggle-text a.google-link { color: #764ba2; font-weight: 600; text-decoration: none; }
+.toggle-text a.google-link:hover { text-decoration: underline; }
+
+.login-divider { border: none; border-top: 1px solid #eee; margin: 22px 0; }
+
+.version-text { text-align: center; font-size: 0.7rem; color: #999; margin-top: 16px; }
+
+@media (max-width: 480px) {
+    body:has(.login-card) { padding: 16px; }
+
+    .login-card {
+        max-width: 100% !important;
+        width: 100%;
+        margin: 0 !important;
+        padding: 22px;
+        border-radius: 16px !important;
+    }
+
+    #form-title { font-size: 1.25rem; }
+
+    .login-card input,
+    .submit-btn,
+    .google-btn {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    .submit-btn, .google-btn { font-weight: 600; }
+}
+/* ==================== END LOGIN PAGE ==================== */
+
+/* ==================== APP HEADER ==================== */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 24px;
+    background: #12141a;
+    border-bottom: 1px solid #22242c;
+}
+
+header h1 { font-size: 1.05rem; font-weight: 600; margin: 0; color: #f2f3f5; }
+
+header nav { font-size: 0.85rem; color: #9aa1ac; }
+
+header nav a {
+    color: #f2f3f5;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 6px;
+}
+
+header nav a:hover { color: #9d8cf0; }
+/* ==================== END APP HEADER ==================== */
+
+/* ==================== CONSOLE LAYOUT (SIDE BY SIDE) ==================== */
+.console {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+    align-items: start;
+}
+
+.panel {
+    background: #14161c;
+    border: 1px solid #22242c;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.query-panel label { display: block; font-size: 0.85rem; color: #9aa1ac; margin-bottom: 8px; }
+
+.query-panel textarea {
+    width: 100%;
+    background: #0b0d12;
+    border: 1px solid #262a33;
+    border-radius: 8px;
+    color: #e6e8eb;
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    font-size: 0.92rem;
+    padding: 12px;
+    resize: vertical;
+    outline: none;
+}
+
+.query-panel textarea:focus { border-color: #764ba2; }
+
+#run-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+#run-btn:hover { opacity: 0.9; }
+#run-btn:disabled { opacity: 0.6; cursor: default; }
+/* ==================== END CONSOLE LAYOUT ==================== */
+
+/* ==================== HISTORY LOG ==================== */
+.history-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    margin: 24px 0 10px;
+    text-transform: uppercase;
+}
+
+#history { list-style: none; padding: 0; margin: 0; }
+
+#history li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 9px 0;
+    border-bottom: 1px solid #22242c;
+    font-size: 0.85rem;
+}
+
+#history li:last-child { border-bottom: none; }
+
+.hist-icon { font-size: 0.8rem; font-weight: 700; flex-shrink: 0; width: 1em; text-align: center; }
+.hist-icon.generated { color: #34d399; }
+.hist-icon.blocked   { color: #f87171; }
+.hist-icon.error     { color: #fbbf24; }
+
+.hist-question { color: #cbd0d8; word-break: break-word; }
+/* ==================== END HISTORY LOG ==================== */
+
+/* ==================== RESULT PANEL ==================== */
+.result-panel-outer { padding: 0; overflow: hidden; }
+
+#result:empty,
+.placeholder { color: #6b7280; padding: 20px; font-size: 0.9rem; }
+
+.result-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.result-status.generated { background: rgba(52, 211, 153, 0.12); color: #34d399; }
+.result-status.blocked   { background: rgba(248, 113, 113, 0.12); color: #f87171; }
+.result-status.error     { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+
+.result-sql {
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.9rem;
+    padding: 16px;
+    background: #0e1015;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #e6e8eb;
+}
+
+.result-note { padding: 14px 16px; font-size: 0.9rem; color: #9aa1ac; }
+.result-note.blocked-note { color: #f87171; }
+.result-note.error-note   { color: #fbbf24; }
+/* ==================== END RESULT PANEL ==================== */
+
+/* ==================== RESPONSIVE / MOBILE ==================== */
+@media (max-width: 900px) {
+    .console { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
+}
+
+@media (max-width: 768px) {
+    header { padding: 12px 16px; }
+    header h1 { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+    header { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .panel { padding: 14px; }
+}
+/* ==================== END RESPONSIVE / MOBILE ==================== */
