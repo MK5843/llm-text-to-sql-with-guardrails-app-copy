@@ -10,7 +10,7 @@ Works against either database, same pattern as app.py:
 - If DATABASE_URL is set (e.g. in GitHub Actions, pointed at Neon) -> uses that
 
 Run manually with:  python etl_daily_stats.py
-Runs automatically once a day via GitHub Actions (see .github/workflows/etl.yml)
+Runs automatically once a day via GitHub Actions (see .github/workflow/etl.yml)
 """
 import os
 from datetime import date
@@ -20,11 +20,11 @@ from sqlalchemy import create_engine, text
 load_dotenv()  # picks up .env when running locally; harmless if it doesn't exist (e.g. in CI)
 
 # ==================== DATABASE CONNECTION (Neon) ====================
-DATABASE_URL = os.environ.get("NEON_DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError(
-        "NEON_DATABASE_URL is not set. Add it to .env for local runs, "
+        "DATABASE_URL is not set. Add it to .env for local runs, "
         "or as a GitHub Actions secret."
     )
 
