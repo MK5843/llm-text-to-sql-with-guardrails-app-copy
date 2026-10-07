@@ -92,15 +92,20 @@ def generate_sql(question: str) -> str:
     order = [os.environ.get("LLM_PROVIDER", "lmstudio")]
     order += [p.strip() for p in os.environ.get("LLM_FALLBACK_ORDER", "").split(",") if p.strip()]
 
-    last_err = None
+    # Every attempt's failure is kept, not just the last one - a provider
+    # failing for a config reason (e.g. a missing key) earlier in the chain
+    # should never be silently hidden behind a later provider's own error.
+    failures: list[str] = []
     for provider in order:
         if provider not in PROVIDERS:
+            failures.append(f"{provider}: not a recognized provider name")
             continue
         try:
             raw = PROVIDERS[provider](messages)
             return _clean_sql(raw)
         except Exception as e:
-            last_err = e
+            failures.append(f"{provider}: {e}")
             continue
 
-    raise RuntimeError(f"All LLM providers failed. Last error: {last_err}")
+    detail = " | ".join(failures) if failures else "no providers configured"
+    raise RuntimeError(f"All LLM providers failed - {detail}")
