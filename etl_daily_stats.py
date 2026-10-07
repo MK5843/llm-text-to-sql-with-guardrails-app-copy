@@ -10,7 +10,7 @@ Works against either database, same pattern as app.py:
 - If DATABASE_URL is set (e.g. in GitHub Actions, pointed at Neon) -> uses that
 
 Run manually with:  python etl_daily_stats.py
-Runs automatically once a day via GitHub Actions (see .github/workflow/etl.yml)
+Runs automatically once a day via GitHub Actions (see .github/workflows/etl.yml)
 """
 import os
 from datetime import date
