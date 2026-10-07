@@ -49,8 +49,10 @@ def call_lmstudio(messages):
 
 
 def call_openai(messages):
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    resp = client.chat.completions.create(model="gpt-5.6-terra", messages=messages)
+    # 15s cap - this is a fallback chain, no single provider should be able
+    # to eat the whole request budget (gunicorn's own timeout is 90s total).
+    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"], timeout=15)
+    resp = client.chat.completions.create(model="gpt-5.6-luna", messages=messages)
     return resp.choices[0].message.content
 
 
@@ -73,7 +75,7 @@ def call_claude(messages):
 def call_gemini(messages):
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     prompt = "\n".join(m["content"] for m in messages)
-    resp = client.models.generate_content(model="gemini-3.8-flash", contents=prompt)
+    resp = client.models.generate_content(model="gemini-3.5-flash-lite", contents=prompt)
     return resp.text
 
 
