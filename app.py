@@ -156,7 +156,7 @@ def api_query():
         history.note = f"LLM error: {e}"
         db.session.add(history)
         db.session.commit()
-        return jsonify({"status": "error", "reason": "Could not generate SQL right now."}), 502
+        return jsonify({"status": "error", "reason": "Unable to generate SQL right now. LLM providers are currently unavailable or experiencing high demand. Please try again later."}), 502
 
     safe_sql, reason, status = validate_and_prepare(raw_sql)
 
