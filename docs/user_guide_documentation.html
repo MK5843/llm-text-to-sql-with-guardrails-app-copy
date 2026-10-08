@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Text-to-SQL with Guardrails — Documentation</title>
+<style>
+  :root{
+    --blue:#2563eb;
+    --blue-dark:#1d4ed8;
+    --ink:#1f2430;
+    --ink-soft:#4b5566;
+    --line:#e4e7ec;
+    --bg-side:#f7f8fa;
+    --code-bg:#0f172a;
+    --code-ink:#e2e8f0;
+    --warn-bg:#fff7ed;
+    --warn-line:#fdba74;
+    --note-bg:#eff6ff;
+    --note-line:#93c5fd;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color:var(--ink);
+    background:#fff;
+    line-height:1.65;
+  }
+  a{color:var(--blue); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    height:56px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:0 20px;
+    background:var(--blue);
+    color:#fff;
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .topbar .brand{
+    font-weight:700;
+    font-size:1.02rem;
+    letter-spacing:.2px;
+  }
+  .topbar .tagline{
+    font-size:.82rem;
+    opacity:.85;
+    display:none;
+  }
+  @media(min-width:720px){ .topbar .tagline{display:inline;} }
+  .topbar .menu-btn{
+    margin-left:auto;
+    background:rgba(255,255,255,.15);
+    border:none;
+    color:#fff;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:.9rem;
+    display:none;
+  }
+  @media(max-width:900px){ .topbar .menu-btn{display:inline-block;} }
+
+  /* ---------- Layout ---------- */
+  .shell{
+    display:flex;
+    max-width:1320px;
+    margin:0 auto;
+  }
+  .sidebar{
+    width:280px;
+    flex-shrink:0;
+    background:var(--bg-side);
+    border-right:1px solid var(--line);
+    height:calc(100vh - 56px);
+    position:sticky;
+    top:56px;
+    overflow-y:auto;
+    padding:18px 0 40px 0;
+  }
+  @media(max-width:900px){
+    .sidebar{
+      position:fixed;
+      left:0; top:56px;
+      height:calc(100vh - 56px);
+      z-index:40;
+      transform:translateX(-100%);
+      transition:transform .2s ease;
+      box-shadow:2px 0 12px rgba(0,0,0,.12);
+    }
+    .sidebar.open{ transform:translateX(0); }
+  }
+  .sidebar h4{
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:#8a93a3;
+    margin:22px 20px 6px 20px;
+  }
+  .sidebar h4:first-child{ margin-top:6px; }
+  .sidebar a.nav-link{
+    display:block;
+    padding:7px 20px;
+    font-size:.9rem;
+    color:var(--ink-soft);
+    border-left:3px solid transparent;
+  }
+  .sidebar a.nav-link:hover{
+    background:#eef1f5;
+    text-decoration:none;
+    color:var(--ink);
+  }
+  .sidebar a.nav-link.active{
+    border-left:3px solid var(--blue);
+    color:var(--blue);
+    background:#eef2ff;
+    font-weight:600;
+  }
+
+  .content{
+    flex:1;
+    min-width:0;
+    padding:36px 44px 100px 44px;
+  }
+  @media(max-width:640px){
+    .content{ padding:24px 18px 80px 18px; }
+  }
+
+  section.doc-section{
+    margin-bottom:56px;
+    scroll-margin-top:72px;
+  }
+  section.doc-section h1{
+    font-size:1.9rem;
+    margin:0 0 6px 0;
+    color:var(--ink);
+  }
+  section.doc-section h2{
+    font-size:1.3rem;
+    margin:34px 0 10px 0;
+    padding-top:6px;
+    border-top:1px solid var(--line);
+  }
+  section.doc-section > h2:first-of-type{ border-top:none; padding-top:0; }
+  section.doc-section h3{
+    font-size:1.05rem;
+    margin:22px 0 8px 0;
+    color:var(--ink);
+  }
+  section.doc-section p{
+    color:var(--ink-soft);
+    max-width:78ch;
+  }
+  section.doc-section ul, section.doc-section ol{
+    color:var(--ink-soft);
+    max-width:74ch;
+    padding-left:22px;
+  }
+  section.doc-section li{ margin-bottom:6px; }
+  section.doc-section li strong{ color:var(--ink); }
+
+  .lede{
+    font-size:1.05rem;
+    color:var(--ink-soft);
+    max-width:70ch;
+  }
+
+  code{
+    background:#eef0f3;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family:"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size:.88em;
+    color:#b8451f;
+  }
+  pre{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:16px 18px;
+    border-radius:8px;
+    overflow-x:auto;
+    font-size:.85rem;
+    line-height:1.55;
+    max-width:78ch;
+  }
+  pre code{
+    background:none;
+    color:inherit;
+    padding:0;
+    font-size:1em;
+  }
+
+  .callout{
+    border-left:4px solid var(--note-line);
+    background:var(--note-bg);
+    padding:12px 16px;
+    border-radius:6px;
+    margin:16px 0;
+    max-width:74ch;
+    font-size:.92rem;
+    color:var(--ink-soft);
+  }
+  .callout.warn{
+    border-left-color:var(--warn-line);
+    background:var(--warn-bg);
+  }
+  .callout strong{ color:var(--ink); }
+
+  table{
+    border-collapse:collapse;
+    width:100%;
+    max-width:78ch;
+    margin:12px 0 20px 0;
+    font-size:.88rem;
+  }
+  th,td{
+    text-align:left;
+    padding:8px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  th{ color:var(--ink); background:#f7f8fa; }
+  td{ color:var(--ink-soft); }
+
+  .step-num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    background:var(--blue);
+    color:#fff;
+    border-radius:50%;
+    font-size:.75rem;
+    font-weight:700;
+    margin-right:8px;
+  }
+
+  .toc-top{
+    background:#f7f8fa;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 20px;
+    max-width:60ch;
+    margin:18px 0 8px 0;
+  }
+  .toc-top a{ display:block; font-size:.9rem; padding:3px 0; }
+
+  footer.docfoot{
+    border-top:1px solid var(--line);
+    margin-top:60px;
+    padding-top:20px;
+    color:#9aa3b2;
+    font-size:.8rem;
+  }
+
+  /* =====================================================
+     Responsive enhancements
+     Breakpoints: >1100 desktop | 901-1100 small laptop /
+     tablet landscape | <=900 tablet & phone (drawer nav) |
+     <=640 phone | <=380 small phone
+     ===================================================== */
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  .content{ overflow-wrap:break-word; }
+  code{ overflow-wrap:anywhere; }
+  pre code{ overflow-wrap:normal; }
+  pre{ -webkit-overflow-scrolling:touch; tab-size:2; }
+  th,td{ vertical-align:top; }
+
+  .topbar{
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
+  }
+  .sidebar{
+    height:calc(100vh - 56px);
+    height:calc(100dvh - 56px);
+    overscroll-behavior:contain;
+  }
+
+  /* tables scroll inside their own box instead of widening the page */
+  .table-wrap{
+    width:100%;
+    max-width:78ch;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    margin:12px 0 20px 0;
+  }
+  .table-wrap table{ margin:0; max-width:none; min-width:100%; }
+
+  /* status pills used in the console UI table */
+  .status-pill{
+    display:inline-block;
+    padding:2px 10px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:600;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+  .status-pill.generated{ background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+  .status-pill.blocked{ background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+  .status-pill.error{ background:#fffbeb; color:#b45309; border-color:#fde68a; }
+
+  .backdrop{ display:none; }
+
+  /* small laptops / tablet landscape: sidebar stays, just narrower */
+  @media (min-width:901px) and (max-width:1100px){
+    .sidebar{ width:240px; }
+    .content{ padding:32px 28px 90px 28px; }
+  }
+
+  /* tablet & phone: slide-out drawer */
+  @media (max-width:900px){
+    .sidebar{
+      width:min(84vw, 320px);
+      padding-bottom:calc(40px + env(safe-area-inset-bottom));
+    }
+    .sidebar a.nav-link{ padding:11px 20px; font-size:.95rem; }
+    .topbar .menu-btn{ min-height:40px; padding:8px 14px; }
+    .content{
+      padding:28px max(28px, env(safe-area-inset-right)) 80px max(28px, env(safe-area-inset-left));
+    }
+    .backdrop{
+      display:block;
+      position:fixed;
+      left:0; right:0; top:56px; bottom:0;
+      background:rgba(15,23,42,.45);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .2s ease;
+      z-index:30;
+    }
+    body.nav-open .backdrop{ opacity:1; pointer-events:auto; }
+    body.nav-open{ overflow:hidden; }
+  }
+
+  /* phones */
+  @media (max-width:640px){
+    .topbar{
+      gap:10px;
+      padding-left:max(14px, env(safe-area-inset-left));
+      padding-right:max(14px, env(safe-area-inset-right));
+    }
+    .topbar .brand{
+      font-size:.95rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      min-width:0;
+    }
+    .content{
+      padding:22px max(16px, env(safe-area-inset-right)) 72px max(16px, env(safe-area-inset-left));
+    }
+    section.doc-section{ margin-bottom:40px; }
+    section.doc-section h1{ font-size:1.5rem; }
+    section.doc-section h2{ font-size:1.15rem; margin-top:28px; }
+    section.doc-section h3{ font-size:1rem; }
+    .lede{ font-size:1rem; }
+    pre{ font-size:.78rem; padding:12px 14px; border-radius:6px; }
+    .table-wrap table{ font-size:.82rem; }
+    th,td{ padding:7px 9px; }
+    .callout{ padding:10px 12px; font-size:.88rem; }
+    .toc-top{ padding:12px 14px; }
+    .toc-top a{ padding:7px 0; }
+  }
+
+  /* very small phones */
+  @media (max-width:380px){
+    .topbar .brand{ font-size:.88rem; }
+    .content{ padding-top:18px; }
+    pre{ font-size:.74rem; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .sidebar, .backdrop{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Text-to-SQL with Guardrails</div>
+  <div class="tagline">Documentation &amp; User Guide</div>
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Toggle navigation menu" aria-controls="sidebar" aria-expanded="false">☰ Menu</button>
+</div>
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar" aria-label="Documentation sections">
+    <h4>Start Here</h4>
+    <a class="nav-link" href="#intro">Introduction</a>
+    <a class="nav-link" href="#prereqs">Prerequisites</a>
+
+    <h4>Project Setup</h4>
+    <a class="nav-link" href="#project-folder">Create the Project</a>
+    <a class="nav-link" href="#venv">Virtual Environment</a>
+    <a class="nav-link" href="#packages">Installing Packages</a>
+
+    <h4>Building the App</h4>
+    <a class="nav-link" href="#basic-flask">Basic Flask App</a>
+    <a class="nav-link" href="#ai-setup">Connecting the AI</a>
+    <a class="nav-link" href="#fallback">Multi-Provider Fallback</a>
+
+    <h4>Guardrails</h4>
+    <a class="nav-link" href="#guardrails-how">How Guardrails Work</a>
+    <a class="nav-link" href="#guardrails-blocked">What Gets Blocked</a>
+
+    <h4>Database</h4>
+    <a class="nav-link" href="#neon-setup">Setting Up Neon</a>
+    <a class="nav-link" href="#postgres-connect">Connecting the App</a>
+    <a class="nav-link" href="#schema">Database Tables</a>
+
+    <h4>Security</h4>
+    <a class="nav-link" href="#env-vars">Environment Variables</a>
+    <a class="nav-link" href="#encryption">Encrypting Questions &amp; SQL</a>
+    <a class="nav-link" href="#password-hash">Password Hashing</a>
+
+    <h4>User Accounts</h4>
+    <a class="nav-link" href="#email-login">Email &amp; Password Login</a>
+    <a class="nav-link" href="#google-login">Google Sign-In</a>
+
+    <h4>Frontend</h4>
+    <a class="nav-link" href="#console-ui">The Console Interface</a>
+    <a class="nav-link" href="#responsive">Mobile Responsive Design</a>
+
+    <h4>Version Control</h4>
+    <a class="nav-link" href="#git-setup">Git &amp; GitHub Setup</a>
+    <a class="nav-link" href="#pushing-updates">Pushing Updates</a>
+
+    <h4>Going Live</h4>
+    <a class="nav-link" href="#same-db">One Database, Local &amp; Live</a>
+    <a class="nav-link" href="#render">Deploying to Render</a>
+
+    <h4>Automation</h4>
+    <a class="nav-link" href="#etl">ETL Pipelines</a>
+    <a class="nav-link" href="#etl-schedule">Scheduling with GitHub Actions</a>
+
+    <h4>Analytics Dashboard</h4>
+    <a class="nav-link" href="#tableau-connect">Connecting Tableau</a>
+    <a class="nav-link" href="#tableau-build">Building the Dashboard</a>
+    <a class="nav-link" href="#tableau-publish">Refresh &amp; Publishing</a>
+
+    <h4>Using the App</h4>
+    <a class="nav-link" href="#user-signup">Creating an Account</a>
+    <a class="nav-link" href="#user-ask">Asking a Question</a>
+    <a class="nav-link" href="#user-results">Understanding Results</a>
+
+    <h4>Reference</h4>
+    <a class="nav-link" href="#troubleshoot">Troubleshooting</a>
+    <a class="nav-link" href="#glossary">Glossary</a>
+  </nav>
+
+  <div class="content">
+
+    <section class="doc-section" id="intro">
+      <h1>Text-to-SQL with Guardrails</h1>
+      <p class="lede">A step-by-step guide to how this project was built — from an empty folder to a live, AI-powered SQL generator with a safety layer, real user accounts, and a live analytics dashboard. Written in plain language — no assumed experience needed.</p>
+
+      <div class="toc-top">
+        <strong>What you'll find in this guide</strong>
+        <a href="#project-folder">→ Setting up the project from scratch</a>
+        <a href="#ai-setup">→ Connecting the app to real AI models</a>
+        <a href="#guardrails-how">→ How the safety layer actually works</a>
+        <a href="#schema">→ How the database is organized</a>
+        <a href="#render">→ Putting the app on the internet</a>
+        <a href="#tableau-connect">→ Building a live analytics dashboard</a>
+        <a href="#user-signup">→ How to actually use the finished app</a>
+      </div>
+
+      <h2>What this app does</h2>
+      <p>It turns a plain-English question into SQL — for any subject, any domain, not tied to one fixed database. Behind the scenes it:</p>
+      <ul>
+        <li>Generates SQL using <strong>a local AI model</strong> (Qwen, via LM Studio) with automatic fallback across <strong>OpenAI, Claude, and Gemini</strong> if one is unavailable</li>
+        <li>Checks every generated query through a <strong>guardrails layer</strong> before it's ever shown — SELECT-only, no destructive statements, no references to this app's own internal tables, no dangerous functions</li>
+        <li><strong>Never executes anything</strong> — this is a generator with a safety layer, not a database client. Nothing is ever run against real data.</li>
+        <li>Lets people sign up with an <strong>email and password</strong>, or sign in with their <strong>Google account</strong></li>
+        <li>Saves every question and its generated SQL <strong>encrypted</strong>, so the raw text can't be read by anyone browsing the database directly</li>
+        <li>Feeds a <strong>live Tableau dashboard</strong> showing usage trends and how often the guardrails actually catch something</li>
+        <li>Runs live on the internet — anyone with the link can try it</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="prereqs">
+      <h2 style="border-top:none;">Prerequisites</h2>
+      <p>Everything used in this project is free. Install these before starting:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Tool</th><th>What it's for</th></tr>
+        <tr><td>Python 3.10+</td><td>Runs the actual application code</td></tr>
+        <tr><td>VS Code</td><td>The editor used to write and run the code</td></tr>
+        <tr><td>Git</td><td>Tracks changes to the code, and pushes it to GitHub</td></tr>
+        <tr><td>A Neon account</td><td>Free cloud PostgreSQL — no local database install needed at all</td></tr>
+        <tr><td>LM Studio</td><td>Runs a free local AI model (Qwen) on your own machine — optional, but the primary provider</td></tr>
+        <tr><td>A GitHub account</td><td>Hosts the code online (a private repository)</td></tr>
+        <tr><td>Tableau Desktop or Public</td><td>Builds the analytics dashboard</td></tr>
+      </table></div>
+      <div class="callout">
+        <strong>No local PostgreSQL needed.</strong> Unlike a typical Flask+database project, this one uses Neon for every environment — local development and the live site both point at the exact same cloud database, so there's nothing to install or keep in sync locally.
+      </div>
+    </section>
+
+    <section class="doc-section" id="project-folder">
+      <h2 style="border-top:none;">Setting Up the Project</h2>
+      <h3><span class="step-num">1</span>Install Python</h3>
+      <p>Download it from <a href="https://python.org" target="_blank">python.org</a>, or on Windows:</p>
+      <pre><code>winget install Python.Python.3.12</code></pre>
+      <h3><span class="step-num">2</span>Create the project folder</h3>
+      <pre><code>mkdir llm-text-to-sql-with-guardrails-app
+cd llm-text-to-sql-with-guardrails-app</code></pre>
+      <p>Open this folder in VS Code (File → Open Folder).</p>
+    </section>
+
+    <section class="doc-section" id="venv">
+      <h2 style="border-top:none;">Virtual Environment</h2>
+      <pre><code>python -m venv venv</code></pre>
+      <p>Activate it — on Windows (Git Bash):</p>
+      <pre><code>source venv/Scripts/activate</code></pre>
+      <p>You'll know it worked when <code>(venv)</code> appears at the start of the terminal line.</p>
+    </section>
+
+    <section class="doc-section" id="packages">
+      <h2 style="border-top:none;">Installing Packages</h2>
+      <p>With the virtual environment active:</p>
+      <pre><code>pip install flask flask-sqlalchemy flask-login flask-limiter authlib sqlglot cryptography openai anthropic google-genai python-dotenv gunicorn psycopg[binary] pytest</code></pre>
+      <div class="table-wrap"><table>
+        <tr><th>Package</th><th>What it does</th></tr>
+        <tr><td>flask / flask-sqlalchemy</td><td>The web framework and its database layer</td></tr>
+        <tr><td>flask-login</td><td>Handles "who is logged in right now"</td></tr>
+        <tr><td>flask-limiter</td><td>Rate-limits the /api/query endpoint</td></tr>
+        <tr><td>authlib</td><td>Handles Google sign-in (OAuth)</td></tr>
+        <tr><td>sqlglot</td><td>Parses and validates generated SQL — the core of the guardrails layer</td></tr>
+        <tr><td>cryptography</td><td>Encrypts questions and generated SQL before saving them</td></tr>
+        <tr><td>openai / anthropic / google-genai</td><td>Official libraries for each fallback AI provider</td></tr>
+        <tr><td>gunicorn</td><td>The server used when the app is live on Render</td></tr>
+      </table></div>
+      <div class="callout warn">
+        <strong>Prefer listing direct dependencies over a raw <code>pip freeze</code>.</strong> A frozen venv can accumulate unrelated packages over a long session — keep <code>requirements.txt</code> to what the code actually imports, and let pip resolve the rest.
+      </div>
+    </section>
+
+    <section class="doc-section" id="basic-flask">
+      <h2 style="border-top:none;">The Basic Flask App</h2>
+      <p>The whole app lives in one flat set of files at the project root — no <code>base.html</code>, no nested app package:</p>
+      <pre><code>app.py              # Flask app: routes, auth, the /api/query endpoint
+extensions.py       # Shared extension instances (db, login_manager, limiter, oauth)
+models.py           # User + QueryHistory (the encrypted "message table")
+llm.py              # Multi-provider AI dispatcher + system prompt
+guardrails.py       # SQL parsing/validation - the core safety logic
+templates/
+  login.html          # One page, JS-toggled Sign In / Register
+  index.html           # The main console (question box + result + history)
+static/
+  style.css             # Dark console theme, gradient buttons, responsive
+  script.js              # Fetch calls to /api/query and /api/history</code></pre>
+      <p>Run it:</p>
+      <pre><code>python app.py</code></pre>
+      <p>Then open <code>http://127.0.0.1:5000</code>.</p>
+    </section>
+
+    <section class="doc-section" id="ai-setup">
+      <h2 style="border-top:none;">Connecting the AI</h2>
+      <p>The primary model runs <strong>locally</strong>, through LM Studio — no API key, no cost, no internet dependency for generation itself.</p>
+      <h3>Running Qwen locally with LM Studio</h3>
+      <ol>
+        <li>Install LM Studio, search for and download <strong>Qwen2.5-Coder-7B-Instruct</strong> (the <em>Instruct</em> variant, not the base model — base models complete text, they don't follow instructions)</li>
+        <li>Load it in LM Studio, then open the Developer tab → <strong>Start Server</strong></li>
+        <li>This exposes an OpenAI-compatible endpoint at <code>http://localhost:1234/v1</code> — the app's <code>LLM_BASE_URL</code> points here by default</li>
+      </ol>
+      <h3>Hosted fallback providers (optional but recommended)</h3>
+      <ul>
+        <li><strong>OpenAI:</strong> key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></li>
+        <li><strong>Anthropic:</strong> key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — scope it to <strong>Default workspace</strong>, not Organization, for least-privilege</li>
+        <li><strong>Gemini:</strong> free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></li>
+      </ul>
+      <p>All of these go in <code>.env</code> — never written directly into the code:</p>
+      <pre><code>LLM_PROVIDER=lmstudio
+LLM_FALLBACK_ORDER=claude
+LLM_BASE_URL=http://localhost:1234/v1
+LLM_MODEL=qwen2.5-coder-7b-instruct
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GEMINI_API_KEY=</code></pre>
+    </section>
+
+    <section class="doc-section" id="fallback">
+      <h2 style="border-top:none;">Multi-Provider Fallback</h2>
+      <p>Rather than depending on one AI service, the app tries a configured order of providers until one works — and unlike a simple try/except, it remembers <em>why each one failed</em>, not just the last error:</p>
+      <pre><code>def generate_sql(question: str) -> str:
+    messages = build_messages(question)
+    order = [os.environ.get("LLM_PROVIDER", "lmstudio")]
+    order += [p.strip() for p in os.environ.get("LLM_FALLBACK_ORDER", "").split(",") if p.strip()]
+
+    failures = []
+    for provider in order:
+        try:
+            raw = PROVIDERS[provider](messages)
+            return _clean_sql(raw)
+        except Exception as e:
+            failures.append(f"{provider}: {e}")
+            continue
+
+    raise RuntimeError(f"All LLM providers failed - {' | '.join(failures)}")</code></pre>
+      <div class="callout">
+        This mattered in practice: an early version only kept the <em>last</em> provider's error, which once hid a Gemini "high demand" 503 that was actually masking a missing API key failure earlier in the chain. See <a href="#troubleshoot">Troubleshooting</a>.
+      </div>
+      <p>On your own machine, <code>lmstudio</code> is first with hosted providers as backup. On Render, <code>LLM_PROVIDER</code> is set directly to a hosted provider, since Render can't reach LM Studio running on your laptop.</p>
+    </section>
+
+    <section class="doc-section" id="guardrails-how">
+      <h1>Guardrails</h1>
+      <h2 style="border-top:none;">How Guardrails Work</h2>
+      <p>Every piece of AI-generated SQL is parsed into a real syntax tree with <code>sqlglot</code> and inspected structurally — never checked with regex or keyword matching, which is trivial to bypass with comments, casing tricks, or whitespace.</p>
+      <ol>
+        <li><strong>Must parse as valid SQL</strong> — anything that fails to parse is blocked</li>
+        <li><strong>Must be exactly one SELECT statement</strong> — any <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>ALTER</code>, <code>TRUNCATE</code>, or <code>GRANT</code> is refused outright, checked at the AST root node type</li>
+        <li><strong>Can never reference <code>user</code> or <code>query_history</code></strong> — this app's own internal tables, permanently off-limits however the question is phrased</li>
+        <li><strong>No disallowed functions</strong> — a short blocklist (<code>pg_sleep</code>, <code>pg_read_file</code>, <code>dblink</code>, and similar) covers functions with no place in an ordinary query</li>
+        <li><strong>Stacked statements are blocked as a side effect of rule 2</strong> — <code>SELECT ...; DROP ...;</code> doesn't parse as a single top-level <code>Select</code> node</li>
+        <li><strong>Row limits are capped, never added</strong> — an excessive <code>LIMIT</code> gets clamped to 200; a query with no limit (or an aggregate that naturally returns one row) stays exactly as generated</li>
+      </ol>
+      <pre><code>cte_names = {cte.alias.lower() for cte in parsed.find_all(exp.CTE)}
+tables = {t.name.lower() for t in parsed.find_all(exp.Table)} - cte_names
+
+if tables & NEVER_EXPOSE:
+    return None, f"Query touches a protected table: {sorted(tables & NEVER_EXPOSE)}", "blocked"</code></pre>
+      <p>That CTE-exclusion line matters: a <code>WITH user AS (...)</code> clause shouldn't be a false positive just because it shares a name with a protected table — but the check still catches the real attack, a CTE whose <em>body</em> still selects from the actual protected table.</p>
+    </section>
+
+    <section class="doc-section" id="guardrails-blocked">
+      <h2 style="border-top:none;">What Gets Blocked</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Example</th><th>Why</th></tr>
+        <tr><td><code>DROP TABLE employees</code></td><td>Not a SELECT statement</td></tr>
+        <tr><td><code>SELECT * FROM "user"</code></td><td>References a protected internal table</td></tr>
+        <tr><td><code>SELECT * FROM a; DROP TABLE a;</code></td><td>Multiple statements</td></tr>
+        <tr><td><code>SELECT pg_sleep(10)</code></td><td>Disallowed function</td></tr>
+        <tr><td><code>WITH t AS (SELECT * FROM "user") SELECT * FROM t</code></td><td>Still blocked — the CTE body still touches a protected table</td></tr>
+      </table></div>
+      <div class="callout">
+        Even a blocked query's generated SQL is still shown to the user, alongside the reason — transparency about what the AI attempted carries no risk here, since nothing was ever going to be executed either way.
+      </div>
+    </section>
+
+    <section class="doc-section" id="neon-setup">
+      <h1>Database</h1>
+      <h2 style="border-top:none;">Setting Up Neon</h2>
+      <ol>
+        <li>Sign up free at <a href="https://neon.tech" target="_blank">neon.tech</a></li>
+        <li>Create a new project — Neon gives back a connection string: <code>postgresql://user:pass@host/dbname?sslmode=require</code></li>
+        <li>That one connection string is used everywhere — local development and the live app both point at the same database</li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="postgres-connect">
+      <h2 style="border-top:none;">Connecting the App</h2>
+      <pre><code>app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]</code></pre>
+      <p>Modern SQLAlchemy automatically resolves a plain <code>postgresql://</code> URL to whichever driver is installed (<code>psycopg2</code> or <code>psycopg</code> v3) — no need for a <code>+psycopg</code> suffix in the URL itself.</p>
+    </section>
+
+    <section class="doc-section" id="schema">
+      <h2 style="border-top:none;">Database Tables</h2>
+      <h3>user — holds accounts</h3>
+      <p>Email, a hashed password (null for Google-only accounts), Google ID if applicable.</p>
+      <h3>query_history — the "message table"</h3>
+      <p>One row per question. <code>nl_question</code> and <code>generated_sql</code> are <strong>encrypted</strong> — see <a href="#encryption">Encryption</a>. <code>status</code> (<code>generated</code> / <code>blocked</code> / <code>error</code>) and <code>created_at</code> are plain.</p>
+      <h3>daily_stats — safe for analytics tools</h3>
+      <p>Built by an ETL job from only the non-encrypted columns of <code>query_history</code> — daily counts per status, unique users. Contains no question or SQL text at all, so it's safe to point Tableau directly at.</p>
+      <h3>query_history_export — optional, decrypted copy</h3>
+      <p>A second ETL script can decrypt <code>nl_question</code>/<code>generated_sql</code> into this separate table, for richer Tableau exploration. See <a href="#etl">ETL Pipelines</a> for the tradeoff this involves.</p>
+      <div class="callout">
+        Splitting the data this way means the dashboard can show real usage trends — and even real question text, if you opt into the decrypted export — without the base <code>query_history</code> table ever holding anything a direct database browse could read.
+      </div>
+    </section>
+
+    <section class="doc-section" id="env-vars">
+      <h1>Security</h1>
+      <h2 style="border-top:none;">Environment Variables</h2>
+      <p>Every secret lives in <code>.env</code>, never uploaded to GitHub. <code>.env.example</code> lists what's needed with placeholder values:</p>
+      <pre><code>SECRET_KEY=change-me
+ENCRYPTION_KEY=change-me
+DATABASE_URL=postgresql://user:password@host/dbname
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+LLM_PROVIDER=lmstudio
+LLM_FALLBACK_ORDER=claude
+LLM_BASE_URL=http://localhost:1234/v1
+LLM_MODEL=qwen2.5-coder-7b-instruct
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GEMINI_API_KEY=</code></pre>
+    </section>
+
+    <section class="doc-section" id="encryption">
+      <h2 style="border-top:none;">Encrypting Questions &amp; SQL</h2>
+      <p>Both <code>nl_question</code> and <code>generated_sql</code> are scrambled before saving, using Fernet encryption. Anyone looking directly at the database sees only <code>gAAAAABq...</code>, never the real text.</p>
+      <pre><code>python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"</code></pre>
+      <p>That key goes into <code>.env</code> as <code>ENCRYPTION_KEY</code>, exposed to the model via plain Python properties so encryption/decryption is transparent everywhere else in the code:</p>
+      <pre><code>@property
+def nl_question(self) -> str:
+    return decrypt_text(self._nl_question)
+
+@nl_question.setter
+def nl_question(self, value: str) -> None:
+    self._nl_question = encrypt_text(value)</code></pre>
+      <div class="callout warn">
+        <strong>This key must never be lost.</strong> If it's lost, every previously saved question and generated query becomes permanently unreadable.
+      </div>
+    </section>
+
+    <section class="doc-section" id="password-hash">
+      <h2 style="border-top:none;">Password Hashing</h2>
+      <p>Different from encryption on purpose — hashing is one-way. Even the app itself can never recover a real password, only check a guess against the hash:</p>
+      <pre><code>from werkzeug.security import generate_password_hash, check_password_hash
+
+user.password_hash = generate_password_hash(password)
+# later:
+check_password_hash(user.password_hash, password_attempt)</code></pre>
+      <p>Google-only accounts have <code>password_hash = None</code>, and the check correctly refuses any password for such an account rather than comparing against nothing.</p>
+    </section>
+
+    <section class="doc-section" id="email-login">
+      <h1>User Accounts</h1>
+      <h2 style="border-top:none;">Email &amp; Password Login</h2>
+      <p>One page, two tabs — Sign In and Register — toggled with plain JavaScript rather than two separate pages:</p>
+      <pre><code>function applyMode(mode) {
+  if (mode === "register") {
+    form.action = "{{ url_for('register') }}";
+    // ...swap title, button text, toggle link text
+  } else {
+    form.action = "{{ url_for('login') }}";
+  }
+}</code></pre>
+    </section>
+
+    <section class="doc-section" id="google-login">
+      <h2 style="border-top:none;">Google Sign-In</h2>
+      <ol>
+        <li>Create a project at <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></li>
+        <li>Under Google Auth Platform, choose <strong>External</strong> user type (not Internal — that requires a Google Workspace org)</li>
+        <li>Create an OAuth client, add both the local and live addresses as <strong>Authorized JavaScript origins</strong> and <strong>Authorized redirect URIs</strong>:
+          <pre><code>http://127.0.0.1:5000
+http://127.0.0.1:5000/login/google/callback
+https://your-app.onrender.com
+https://your-app.onrender.com/login/google/callback</code></pre>
+        </li>
+        <li>Copy the Client ID and Secret into <code>.env</code></li>
+      </ol>
+      <div class="callout warn">
+        <code>127.0.0.1</code> and <code>localhost</code> are treated as <strong>different origins</strong> by Google — whichever one Flask actually prints on startup is the one that must be used consistently, in the browser and in these settings.
+      </div>
+    </section>
+
+    <section class="doc-section" id="console-ui">
+      <h1>Frontend</h1>
+      <h2 style="border-top:none;">The Console Interface</h2>
+      <p>A side-by-side layout rather than a chat thread — a question panel on the left, the generated SQL result on the right, since this is a generator producing one answer per question, not a back-and-forth conversation. Dark canvas, gradient buttons, monospace for SQL specifically so it reads visually as data, distinct from the surrounding UI text.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Status</th><th>Meaning</th></tr>
+        <tr><td><span class="status-pill generated">✓ generated</span></td><td>Passed every guardrail check</td></tr>
+        <tr><td><span class="status-pill blocked">✕ blocked</span></td><td>Failed a safety check — SQL and reason both shown</td></tr>
+        <tr><td><span class="status-pill error">! error</span></td><td>A technical failure (e.g. all AI providers unavailable), not a safety issue</td></tr>
+      </table></div>
+    </section>
+
+    <section class="doc-section" id="responsive">
+      <h2 style="border-top:none;">Mobile Responsive Design</h2>
+      <p>The side-by-side layout collapses to a single stacked column under 900px, with further spacing adjustments under 480px for phones:</p>
+      <pre><code>@media (max-width: 900px) {
+    .console { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
+}</code></pre>
+    </section>
+
+    <section class="doc-section" id="git-setup">
+      <h1>Version Control</h1>
+      <h2 style="border-top:none;">Git &amp; GitHub Setup</h2>
+      <pre><code>venv/
+__pycache__/
+.env
+*.pyc
+.pytest_cache/
+instance/</code></pre>
+      <pre><code>git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/yourusername/llm-text-to-sql-with-guardrails-app.git
+git push -u origin main</code></pre>
+      <div class="callout warn">
+        <strong>GitHub no longer accepts your account password for this.</strong> Use a Personal Access Token, or GitHub's Credential Manager popup.
+      </div>
+    </section>
+
+    <section class="doc-section" id="pushing-updates">
+      <h2 style="border-top:none;">Pushing Future Updates</h2>
+      <pre><code>git add .
+git commit -m "describe what changed"
+git push</code></pre>
+    </section>
+
+    <section class="doc-section" id="same-db">
+      <h1>Going Live</h1>
+      <h2 style="border-top:none;">One Database, Local &amp; Live</h2>
+      <p>Unlike a typical setup with separate local and production databases, this project intentionally uses <strong>the same Neon database everywhere</strong>. The only thing that differs between local and live is <code>LLM_PROVIDER</code> — local defaults to <code>lmstudio</code>, Render is set directly to a hosted provider, since Render has no way to reach LM Studio running on your own machine.</p>
+    </section>
+
+    <section class="doc-section" id="render">
+      <h2 style="border-top:none;">Deploying to Render</h2>
+      <ol>
+        <li>Sign up at <a href="https://render.com" target="_blank">render.com</a></li>
+        <li><strong>New +</strong> → <strong>Web Service</strong> → connect the GitHub repository</li>
+        <li><strong>Build Command:</strong> <code>pip install -r requirements.txt</code></li>
+        <li><strong>Start Command:</strong> <code>gunicorn app:app --timeout 90</code></li>
+        <li>Add every secret from <code>.env</code> as an Environment Variable in Render's dashboard</li>
+      </ol>
+      <div class="callout warn">
+        <strong>If the service was created by clicking through Render's dashboard</strong> (not via a Blueprint sync), pushing an updated <code>render.yaml</code> may not automatically update the live Start Command — set it directly in the dashboard too, so there's no ambiguity about which one wins.
+      </div>
+    </section>
+
+    <section class="doc-section" id="etl">
+      <h1>Automation</h1>
+      <h2 style="border-top:none;">ETL Pipelines</h2>
+      <p>Two separate scripts, each with a deliberately different relationship to <code>ENCRYPTION_KEY</code>:</p>
+      <h3>etl_daily_stats.py — never touches the encryption key</h3>
+      <p>Aggregates only the non-encrypted columns of <code>query_history</code> (<code>status</code>, <code>user_id</code>, <code>created_at</code>) into <code>daily_stats</code>. This script runs correctly with <strong>zero</strong> access to <code>ENCRYPTION_KEY</code> — it's structurally impossible for it to see decrypted content.</p>
+      <pre><code>SELECT
+    created_at::date,
+    COUNT(*),
+    COUNT(*) FILTER (WHERE status = 'generated'),
+    COUNT(*) FILTER (WHERE status = 'blocked'),
+    COUNT(*) FILTER (WHERE status = 'error'),
+    COUNT(DISTINCT user_id)
+FROM query_history
+GROUP BY created_at::date
+ON CONFLICT (stat_date) DO UPDATE SET ...</code></pre>
+      <h3>etl_decrypt_for_tableau.py — the one script that does decrypt</h3>
+      <p>Optionally decrypts <code>nl_question</code>/<code>generated_sql</code> into a separate <code>query_history_export</code> table, for richer dashboard exploration. This is the one place in the whole project that writes decrypted text to disk outside the running app — paired with a scoped-down <code>tableau_reader</code> database role that can read this export table and <code>daily_stats</code>, but never the raw <code>query_history</code> or <code>user</code> tables.</p>
+      <div class="callout warn">
+        <strong>Real tradeoff, not a hidden one:</strong> a decrypted export table means that data no longer benefits from encryption-at-rest. Weigh whether the richer exploration is worth it before enabling this second script — <code>daily_stats</code> alone is enough for trend/volume analysis with zero decrypted content anywhere.
+      </div>
+    </section>
+
+    <section class="doc-section" id="etl-schedule">
+      <h2 style="border-top:none;">Scheduling with GitHub Actions</h2>
+      <p><code>.github/workflows/etl.yml</code> runs the ETL automatically, once a day:</p>
+      <pre><code>on:
+  schedule:
+    - cron: "0 3 * * *"   # daily at 3:00 AM UTC
+  workflow_dispatch:        # also runnable manually from GitHub's Actions tab
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install sqlalchemy "psycopg[binary]" python-dotenv
+      - run: python etl_daily_stats.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}</code></pre>
+
+      <h3><span class="step-num">1</span>Add DATABASE_URL as a GitHub Actions secret</h3>
+      <p>The workflow reads <code>${{ secrets.DATABASE_URL }}</code> — this does nothing on its own until the secret actually exists in the repo:</p>
+      <ol>
+        <li>On github.com, open the repo → <strong>Settings</strong> tab → <strong>Secrets and variables</strong> → <strong>Actions</strong></li>
+        <li>Under the <strong>Secrets</strong> tab (not Variables), click <strong>New repository secret</strong></li>
+        <li>Name: exactly <code>DATABASE_URL</code> (case-sensitive) · Value: the same full Neon connection string from <code>.env</code></li>
+      </ol>
+      <div class="callout warn">
+        <strong>Must be a repository secret, not an environment secret.</strong> Unless the workflow job declares <code>environment: &lt;name&gt;</code>, only repo-level secrets are visible to it — an environment-scoped secret of the same name silently won't be found.
+      </div>
+      <h3><span class="step-num">2</span>Test it</h3>
+      <p>Actions tab → the workflow → <strong>Run workflow</strong> (uses the <code>workflow_dispatch</code> trigger — no need to wait for the 3am cron). The run should print a success line instead of raising <code>RuntimeError: DATABASE_URL is not set</code>.</p>
+    </section>
+
+    <section class="doc-section" id="tableau-connect">
+      <h1>Analytics Dashboard</h1>
+      <h2 style="border-top:none;">Connecting Tableau</h2>
+      <ol>
+        <li><strong>Connect → To a Server → PostgreSQL</strong></li>
+        <li>Enter the host, port (5432), database name, username/password from <code>DATABASE_URL</code></li>
+        <li>Tick <strong>Require SSL</strong> — Neon requires it for every connection</li>
+        <li>Pull in <code>daily_stats</code> (and <code>query_history_export</code>, if that second ETL is in use) — never <code>query_history</code> directly, its sensitive columns are ciphertext and unreadable to Tableau anyway</li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="tableau-build">
+      <h2 style="border-top:none;">Building the Dashboard</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Sheet</th><th>Shows</th></tr>
+        <tr><td>Volume Over Time</td><td><code>stat_date</code> on Columns, <code>SUM(total_questions)</code> on Rows, line chart</td></tr>
+        <tr><td>Status Breakdown</td><td><code>generated_count</code>/<code>blocked_count</code>/<code>error_count</code> stacked bar, colored to match the app itself</td></tr>
+        <tr><td>Blocked Rate</td><td>Calculated field <code>SUM(blocked_count) / SUM(total_questions)</code>, formatted as a percentage</td></tr>
+        <tr><td>Unique Users</td><td><code>stat_date</code> on Columns, <code>SUM(unique_users)</code> on Rows, bar chart</td></tr>
+      </table></div>
+      <p>Matching the app's own status colors for visual consistency:</p>
+      <pre><code>generated_count -> #34d399
+blocked_count   -> #f87171
+error_count     -> #fbbf24</code></pre>
+    </section>
+
+    <section class="doc-section" id="tableau-publish">
+      <h2 style="border-top:none;">Refresh &amp; Publishing</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Where</th><th>Live connection</th></tr>
+        <tr><td>Tableau Desktop</td><td>Yes — set the data source connection to Live</td></tr>
+        <tr><td>Tableau Server / Cloud</td><td>Yes, or an Extract with a scheduled refresh</td></tr>
+        <tr><td>Tableau Public</td><td>Not supported — direct database connections are disabled; must use a periodically refreshed Extract</td></tr>
+      </table></div>
+      <div class="callout warn">
+        <strong>Honest limitation:</strong> a fully public, always-live dashboard (viewable by anyone without Tableau installed) needs Tableau Server/Cloud — on Tableau Public specifically, "live" really means "as fresh as the last Extract refresh."
+      </div>
+    </section>
+
+    <section class="doc-section" id="user-signup">
+      <h1>Using the App</h1>
+      <p class="lede">This section is for anyone using the finished app — no technical background needed.</p>
+      <h2 style="border-top:none;">Creating an Account</h2>
+      <ol>
+        <li>Open the app's web address</li>
+        <li>Either create an account with an email and password, or click <strong>Continue with Google</strong></li>
+        <li>Switch between Sign In and Register using the tabs — no separate page</li>
+      </ol>
+    </section>
+
+    <section class="doc-section" id="user-ask">
+      <h2 style="border-top:none;">Asking a Question</h2>
+      <ol>
+        <li>Type any question — any subject, not limited to one dataset</li>
+        <li>Click <strong>Generate SQL</strong> (or press Ctrl / Cmd + Enter)</li>
+      </ol>
+      <div class="callout">
+        Nothing is ever executed. The output is always SQL text, checked and ready to read — never a results table of real data.
+      </div>
+    </section>
+
+    <section class="doc-section" id="user-results">
+      <h2 style="border-top:none;">Understanding Results</h2>
+      <p>Every past question appears in the History list, most recent first — private to your account, both the question and the generated SQL stored encrypted.</p>
+    </section>
+
+    <section class="doc-section" id="troubleshoot">
+      <h1>Reference</h1>
+      <h2 style="border-top:none;">Troubleshooting</h2>
+      <p>Real problems hit while building this — and their actual fixes.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Problem</th><th>Cause &amp; fix</th></tr>
+        <tr><td><code>ModuleNotFoundError: No module named 'dotenv'</code></td><td>Virtual environment wasn't active, or <code>pip install -r requirements.txt</code> hadn't been run in it</td></tr>
+        <tr><td><code>could not translate host name "host"</code></td><td><code>.env</code> still had the placeholder value from <code>.env.example</code> instead of the real Neon connection string</td></tr>
+        <tr><td>Google sign-in: <code>invalid_grant: Bad Request</code></td><td>The authorization code was reused (e.g. the callback URL got refreshed) — codes are single-use. Fixed by catching <code>OAuthError</code> and redirecting back to login with a message instead of crashing</td></tr>
+        <tr><td><code>/api/query</code> intermittently returns 502</td><td>Gunicorn's default 30s timeout, combined with a slow/overloaded AI provider in the fallback chain. Fixed with <code>gunicorn app:app --timeout 90</code> plus a 15s per-provider <code>timeout=</code> on the OpenAI/Claude clients</td></tr>
+        <tr><td>"All LLM providers failed" only shows one error</td><td>The fallback loop kept only the <em>last</em> failure. Fixed to collect every provider's reason, so a misconfigured key earlier in the chain is never hidden behind a later provider's own error</td></tr>
+        <tr><td>GitHub Actions ETL: <code>DATABASE_URL is not set</code></td><td>The secret didn't exist yet in the repo, or was added as an environment secret rather than a repository secret — see <a href="#etl-schedule">Scheduling with GitHub Actions</a></td></tr>
+        <tr><td>Pylance: "No parameter named email"</td><td>Flask-SQLAlchemy's auto-generated model constructor isn't typed. Fixed by switching to SQLAlchemy 2.0's <code>Mapped</code>/<code>mapped_column</code> style with explicit, typed <code>__init__</code> methods</td></tr>
+      </table></div>
+    </section>
+
+    <section class="doc-section" id="glossary">
+      <h2 style="border-top:none;">Glossary</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Term</th><th>Plain meaning</th></tr>
+        <tr><td>Guardrails</td><td>Automated checks on AI-generated SQL before it's shown — not a security product, just careful parsing and a blocklist</td></tr>
+        <tr><td>API key</td><td>A private password that lets the app use a service like OpenAI</td></tr>
+        <tr><td>Environment variable</td><td>A secret value stored outside the code, never visible in it</td></tr>
+        <tr><td>Encryption</td><td>Scrambling data so only someone with the right key can read it (reversible)</td></tr>
+        <tr><td>Hashing</td><td>A one-way scramble used for passwords — checkable, never reversible</td></tr>
+        <tr><td>OAuth</td><td>A secure way to sign in using another account (like Google) without sharing a password</td></tr>
+        <tr><td>Fallback chain</td><td>Trying one AI provider, then another, in order, until one succeeds</td></tr>
+        <tr><td>ETL</td><td>Extract, Transform, Load — turning raw rows into a clean, aggregated summary</td></tr>
+        <tr><td>Repository secret (GitHub)</td><td>An encrypted value available to all workflows in a repo — different from an environment-scoped secret</td></tr>
+        <tr><td>Deploy</td><td>Putting an app on the internet so anyone can visit it</td></tr>
+      </table></div>
+    </section>
+
+    <footer class="docfoot">
+      Text-to-SQL with Guardrails — internal documentation. Last updated as part of the project build.
+    </footer>
+  </div>
+</div>
+
+<script>
+  const sidebar  = document.getElementById('sidebar');
+  const menuBtn  = document.getElementById('menuBtn');
+  const backdrop = document.getElementById('backdrop');
+
+  function setMenu(open){
+    sidebar.classList.toggle('open', open);
+    document.body.classList.toggle('nav-open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+  }
+  menuBtn.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
+  backdrop.addEventListener('click', () => setMenu(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+  window.matchMedia('(min-width: 901px)').addEventListener('change', e => { if (e.matches) setMenu(false); });
+
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section.doc-section');
+  function setActive(){
+    let current = sections[0]?.id;
+    sections.forEach(s=>{
+      const rect = s.getBoundingClientRect();
+      if(rect.top < 120) current = s.id;
+    });
+    links.forEach(l=>{
+      l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', setActive, { passive:true });
+  setActive();
+
+  links.forEach(l => l.addEventListener('click', () => setMenu(false)));
+</script>
+
+</body>
+</html>
