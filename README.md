@@ -6,7 +6,7 @@ For example, you type *"Who are the 5 highest paid employees?"* and the app give
 
 > **Important:** this app only *writes* the SQL. It never runs it. Your data is never touched.
 
-**Try it live:** [https://llm-text-to-sql-with-guardrails-app.onrender.com/]
+**Try it live:** [https://llm-text-to-sql-with-guardrails-app.onrender.com/] <br/>
 **Full guide:** open `user_guide_documentation.html` in your browser
 
 ---
