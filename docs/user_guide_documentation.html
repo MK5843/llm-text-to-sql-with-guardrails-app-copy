@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Text-to-SQL with Guardrails — Documentation</title>
+<title>Text-to-PostgreSQL with Guardrails — Documentation</title>
 <style>
   :root{
     --blue:#2563eb;
@@ -383,7 +383,7 @@
 <body>
 
 <div class="topbar">
-  <div class="brand">Text-to-SQL with Guardrails</div>
+  <div class="brand">Text-to-PostgreSQL with Guardrails</div>
   <div class="tagline">Documentation &amp; User Guide</div>
   <button class="menu-btn" id="menuBtn" type="button" aria-label="Toggle navigation menu" aria-controls="sidebar" aria-expanded="false">☰ Menu</button>
 </div>
@@ -457,7 +457,7 @@
   <div class="content">
 
     <section class="doc-section" id="intro">
-      <h1>Text-to-SQL with Guardrails</h1>
+      <h1>Text-to-PostgreSQL with Guardrails</h1>
       <p class="lede">A step-by-step guide to how this project was built — from an empty folder to a live, AI-powered SQL generator with a safety layer, real user accounts, and a live analytics dashboard. Written in plain language — no assumed experience needed.</p>
 
       <div class="toc-top">
@@ -474,7 +474,7 @@
       <h2>What this app does</h2>
       <p>It turns a plain-English question into SQL — for any subject, any domain, not tied to one fixed database. Behind the scenes it:</p>
       <ul>
-        <li>Generates SQL using <strong>a local AI model</strong> (Qwen, via LM Studio) with automatic fallback across <strong>OpenAI, Claude, and Gemini</strong> if one is unavailable</li>
+        <li>Generates SQL (PostgreSQL language only) using <strong>a local AI model</strong> (Qwen, via LM Studio) with automatic fallback across <strong>OpenAI, Claude, and Gemini</strong> if one is unavailable</li>
         <li>Checks every generated query through a <strong>guardrails layer</strong> before it's ever shown — SELECT-only, no destructive statements, no references to this app's own internal tables, no dangerous functions</li>
         <li><strong>Never executes anything</strong> — this is a generator with a safety layer, not a database client. Nothing is ever run against real data.</li>
         <li>Lets people sign up with an <strong>email and password</strong>, or sign in with their <strong>Google account</strong></li>
@@ -565,7 +565,7 @@ static/
       <p>The primary model runs <strong>locally</strong>, through LM Studio — no API key, no cost, no internet dependency for generation itself.</p>
       <h3>Running Qwen locally with LM Studio</h3>
       <ol>
-        <li>Install LM Studio, search for and download <strong>Qwen2.5-Coder-7B-Instruct</strong> (the <em>Instruct</em> variant, not the base model — base models complete text, they don't follow instructions)</li>
+        <li>Install LM Studio, search for and download <strong>Qwen2.5-Coder-7B-Instruct or Qwen2.5-Coder-14B-Instruct</strong> (the <em>Instruct</em> variant, not the base model — base models complete text, they don't follow instructions)</li>
         <li>Load it in LM Studio, then open the Developer tab → <strong>Start Server</strong></li>
         <li>This exposes an OpenAI-compatible endpoint at <code>http://localhost:1234/v1</code> — the app's <code>LLM_BASE_URL</code> points here by default</li>
       </ol>
@@ -576,13 +576,13 @@ static/
         <li><strong>Gemini:</strong> free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></li>
       </ul>
       <p>All of these go in <code>.env</code> — never written directly into the code:</p>
-      <pre><code>LLM_PROVIDER=lmstudio
-LLM_FALLBACK_ORDER=claude
-LLM_BASE_URL=http://localhost:1234/v1
-LLM_MODEL=qwen2.5-coder-7b-instruct
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-GEMINI_API_KEY=</code></pre>
+      <pre><code>LLM_PROVIDER="lmstudio"
+LLM_FALLBACK_ORDER="openai,claude,gemini"
+LLM_BASE_URL="http://localhost:1234/v1"
+LLM_MODEL="qwen2.5-coder-7b-instruct" or "qwen2.5-coder-14b-instruct"
+OPENAI_API_KEY=""
+ANTHROPIC_API_KEY=""
+GEMINI_API_KEY=""</code></pre>
     </section>
 
     <section class="doc-section" id="fallback">
@@ -679,18 +679,20 @@ if tables & NEVER_EXPOSE:
       <h1>Security</h1>
       <h2 style="border-top:none;">Environment Variables</h2>
       <p>Every secret lives in <code>.env</code>, never uploaded to GitHub. <code>.env.example</code> lists what's needed with placeholder values:</p>
-      <pre><code>SECRET_KEY=change-me
-ENCRYPTION_KEY=change-me
-DATABASE_URL=postgresql://user:password@host/dbname
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-LLM_PROVIDER=lmstudio
-LLM_FALLBACK_ORDER=claude
-LLM_BASE_URL=http://localhost:1234/v1
-LLM_MODEL=qwen2.5-coder-7b-instruct
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-GEMINI_API_KEY=</code></pre>
+      <pre><code>
+SECRET_KEY="your-secret-key-here" # This is a secret key used for session management and should be kept confidential. You can generate a new one using Python's secrets module: `python -c 'import secrets; print(secrets.token_hex(32))'`
+ENCRYPTION_KEY="your-encryption-key-here" # This is a base64-encoded encryption key used for encrypting sensitive data. You can generate a new one using Python's secrets module: `python -c 'import secrets, base64; print(base64.b64encode(secrets.token_bytes(32)).decode())'`
+DATABASE_URL="your-database-url-here" # This is the URL for your PostgreSQL database. It should be in the format: `postgresql://username:password@host:port/database_name`. Make sure to replace it with your actual database credentials.
+GOOGLE_CLIENT_ID="your-google-client-id-here" # This is the client ID for your Google OAuth application. You can obtain it from the Google Cloud Console when you set up OAuth 2.0 credentials.
+GOOGLE_CLIENT_SECRET="your-google-client-secret-here" # This is the client secret for your Google OAuth application. You can obtain it from the Google Cloud Console when you set up OAuth 2.0 credentials.
+LLM_PROVIDER="lmstudio" # This is the LLM provider to use (e.g., lmstudio, openai, anthropic, gemini)
+LLM_FALLBACK_ORDER="openai,claude,gemini" # This is the order in which to try LLM providers if one fails
+LLM_BASE_URL="your-llm-base-url-here" # This is the base URL for your LLM provider (e.g., LM Studio, OpenAI, etc.)
+LLM_MODEL="qwen2.5-coder-7b-instruct" or "qwen2.5-coder-14b-instruct" # Your preferred LLM model
+OPENAI_API_KEY="your-openai-api-key-here" # This is the API key for OpenAI. You can obtain it from the OpenAI platform when you create an API key.
+ANTHROPIC_API_KEY="your-anthropic-api-key-here" # This is the API key for Anthropic. You can obtain it from the Anthropic platform when you create an API key.
+GEMINI_API_KEY="your-gemini-api-key-here" # This is the API key for Gemini. You can obtain it from the Gemini platform when you create an API key.
+           </code></pre>
     </section>
 
     <section class="doc-section" id="encryption">
@@ -736,21 +738,83 @@ check_password_hash(user.password_hash, password_attempt)</code></pre>
     </section>
 
     <section class="doc-section" id="google-login">
-      <h2 style="border-top:none;">Google Sign-In</h2>
+      <h2 style="border-top:none;">Google Sign-In &amp; Google Cloud Console Setup</h2>
+      <p>"Continue with Google" needs two secret values from Google: a <strong>Client ID</strong> and a <strong>Client Secret</strong>. You get both by registering the app in the Google Cloud Console. It is free and takes about 10 minutes. You only do this once.</p>
+ 
+      <h3><span class="step-num">1</span>Create a Google Cloud project</h3>
       <ol>
-        <li>Create a project at <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></li>
-        <li>Under Google Auth Platform, choose <strong>External</strong> user type (not Internal — that requires a Google Workspace org)</li>
-        <li>Create an OAuth client, add both the local and live addresses as <strong>Authorized JavaScript origins</strong> and <strong>Authorized redirect URIs</strong>:
+        <li>Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> and sign in with your Google account</li>
+        <li>Click the <strong>project picker</strong> at the top of the page (next to the Google Cloud logo), then click <strong>New Project</strong></li>
+        <li>Give it a name, such as <code>text-to-postgresql-app</code>, and click <strong>Create</strong></li>
+        <li>Make sure the new project is selected in the project picker before you continue</li>
+      </ol>
+ 
+      <h3><span class="step-num">2</span>Set up the consent screen</h3>
+      <p>This is the screen people see when Google asks "Do you want to sign in to this app?"</p>
+      <ol>
+        <li>Open the menu (☰) → <strong>Google Auth Platform</strong> (older accounts: <strong>APIs &amp; Services → OAuth consent screen</strong>) and click <strong>Get started</strong></li>
+        <li><strong>App name:</strong> the name people will see, for example <em>Text-to-PostgreSQL</em></li>
+        <li><strong>User support email:</strong> choose your own email</li>
+        <li><strong>Audience:</strong> choose <strong>External</strong>. <em>Internal</em> only works inside a Google Workspace company</li>
+        <li><strong>Contact information:</strong> enter your email, agree to the policy, then click <strong>Create</strong></li>
+      </ol>
+      <div class="callout">
+        The app only asks for each person's <strong>email address and basic profile</strong> (the <code>openid</code>, <code>email</code> and <code>profile</code> scopes). These are the default scopes, so you don't need to add anything.
+      </div>
+ 
+      <h3><span class="step-num">3</span>Choose who can sign in</h3>
+      <p>New apps start in <strong>Testing</strong> mode. In this mode only people you list can sign in.</p>
+      <ol>
+        <li>Go to <strong>Google Auth Platform → Audience</strong></li>
+        <li>Under <strong>Test users</strong>, click <strong>Add users</strong> and enter the Gmail addresses that should be able to sign in (add your own first)</li>
+        <li>When you are ready for anyone to use the app, click <strong>Publish app</strong> on the same page. Because the app only asks for the basic scopes, it does not need a Google review</li>
+      </ol>
+ 
+      <h3><span class="step-num">4</span>Create the OAuth client (this gives you the ID and Secret)</h3>
+      <ol>
+        <li>Go to <strong>Google Auth Platform → Clients</strong> (older accounts: <strong>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</strong>)</li>
+        <li>Click <strong>Create client</strong></li>
+        <li><strong>Application type:</strong> choose <strong>Web application</strong></li>
+        <li><strong>Name:</strong> anything you like, for example <em>Flask web client</em></li>
+        <li>Under <strong>Authorized JavaScript origins</strong>, click <strong>Add URI</strong> and add the web address of your app, without any path:
           <pre><code>http://127.0.0.1:5000
-http://127.0.0.1:5000/login/google/callback
-https://your-app.onrender.com
+https://your-app.onrender.com</code></pre>
+        </li>
+        <li>Under <strong>Authorized redirect URIs</strong>, click <strong>Add URI</strong> and add the same addresses, each ending in <code>/login/google/callback</code>:
+          <pre><code>http://127.0.0.1:5000/login/google/callback
 https://your-app.onrender.com/login/google/callback</code></pre>
         </li>
-        <li>Copy the Client ID and Secret into <code>.env</code></li>
+        <li>Click <strong>Create</strong></li>
       </ol>
       <div class="callout warn">
-        <code>127.0.0.1</code> and <code>localhost</code> are treated as <strong>different origins</strong> by Google — whichever one Flask actually prints on startup is the one that must be used consistently, in the browser and in these settings.
+        <strong>The addresses must match exactly.</strong> <code>http</code> and <code>https</code> are different, a trailing <code>/</code> counts, and <code>127.0.0.1</code> and <code>localhost</code> are treated as <strong>different</strong> addresses. Use whichever one Flask prints when it starts, in both your browser and these settings.
       </div>
+ 
+      <h3><span class="step-num">5</span>Copy the Client ID and Client Secret</h3>
+      <p>A box appears showing your <strong>Client ID</strong> and <strong>Client secret</strong>. Copy both. You can open the client again later from the <strong>Clients</strong> page if you need them.</p>
+      <div class="callout warn">
+        <strong>Treat the Client Secret like a password.</strong> Never paste it into your code, never upload it to GitHub, and never share it in a screenshot. If it leaks, open the client in the Cloud Console and create a new secret.
+      </div>
+ 
+      <h3><span class="step-num">6</span>Add them to your settings</h3>
+      <p>Open your <code>.env</code> file and paste the two values in:</p>
+      <pre><code># Client ID for the Google sign-in app (from Google Cloud Console)
+GOOGLE_CLIENT_ID="your-google-client-id-here"
+ 
+# Client secret for the Google sign-in app (from Google Cloud Console)
+GOOGLE_CLIENT_SECRET="your-google-client-secret-here"</code></pre>
+      <p>Replace the text in quotes with the values you copied. When you deploy, add the same two names and values under <strong>Environment</strong> in Render's dashboard, because Render does not read your <code>.env</code> file.</p>
+ 
+      <h3><span class="step-num">7</span>Test it</h3>
+      <ol>
+        <li>Restart the app (<code>python app.py</code>) so it reads the new settings</li>
+        <li>Open the sign-in page and click <strong>Continue with Google</strong></li>
+        <li>Choose a Google account that is on your test users list. You should land back in the app, signed in</li>
+      </ol>
+      <div class="callout">
+        <strong>When you get a live web address,</strong> come back to <strong>Google Auth Platform → Clients</strong>, open your client, and add the live address and its <code>/login/google/callback</code> to both lists. Changes can take a few minutes to start working.
+      </div>
+      <p>If something goes wrong, see the Google rows in <a href="#troubleshoot">Troubleshooting</a>.</p>
     </section>
 
     <section class="doc-section" id="console-ui">
@@ -978,7 +1042,7 @@ error_count     -> #fbbf24</code></pre>
     </section>
 
     <footer class="docfoot">
-      Text-to-SQL with Guardrails — internal documentation. Last updated as part of the project build.
+      Text-to-PostgreSQL with Guardrails — internal documentation. Last updated as part of the project build.
     </footer>
   </div>
 </div>

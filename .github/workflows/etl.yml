@@ -27,7 +27,7 @@ jobs:
 
       - name: Run ETL
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets['DATABASE_URL'] }}
         run: python etl_daily_stats.py
 
       # ---- OLD (commented out) ----
