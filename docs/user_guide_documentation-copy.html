@@ -942,32 +942,73 @@ jobs:
       <p>Actions tab → the workflow → <strong>Run workflow</strong> (uses the <code>workflow_dispatch</code> trigger — no need to wait for the 3am cron). The run should print a success line instead of raising <code>RuntimeError: DATABASE_URL is not set</code>.</p>
     </section>
 
-    <section class="doc-section" id="tableau-connect">
+     <section class="doc-section" id="tableau-connect">
       <h1>Analytics Dashboard</h1>
       <h2 style="border-top:none;">Connecting Tableau</h2>
       <ol>
-        <li><strong>Connect → To a Server → PostgreSQL</strong></li>
-        <li>Enter the host, port (5432), database name, username/password from <code>DATABASE_URL</code></li>
-        <li>Tick <strong>Require SSL</strong> — Neon requires it for every connection</li>
-        <li>Pull in <code>daily_stats</code> (and <code>query_history_export</code>, if that second ETL is in use) — never <code>query_history</code> directly, its sensitive columns are ciphertext and unreadable to Tableau anyway</li>
+        <li>Open Tableau and choose <strong>Connect → To a Server → PostgreSQL</strong></li>
+        <li>Enter the details from your Neon connection string: <strong>Server</strong> (the host), <strong>Port</strong> (5432), <strong>Database</strong>, <strong>Username</strong> and <strong>Password</strong></li>
+        <li>Tick <strong>Require SSL</strong>. Neon needs it for every connection</li>
+        <li>Click <strong>Sign In</strong>, then drag the table you want onto the canvas: <code>query_history</code> or <code>daily_stats</code> (see below)</li>
       </ol>
+      <div class="table-wrap"><table>
+        <tr><th>Table</th><th>Use it for</th></tr>
+        <tr><td><code>query_history</code></td><td>The full dashboard, including the Query Explorer table that shows each question and its SQL</td></tr>
+        <tr><td><code>daily_stats</code></td><td>Counts only (one row per day). It holds no question or SQL text, so it is the safer choice for a dashboard other people will see</td></tr>
+      </table></div>
+      <div class="callout warn">
+        <strong>Never connect the <code>user</code> table.</strong> It holds emails and password hashes. Also, if encryption is on, the <code>nl_question</code> and <code>generated_sql</code> columns show as random letters (<code>gAAAA...</code>) in Tableau. They only read clearly when the text is stored as plain text.
+      </div>
+      <h3>Use a read-only database user</h3>
+      <p>Don't sign in to Tableau with your database owner account. A workbook remembers the host and username, and an owner account can change or delete anything. Create a user that can only read, by running this in the Neon SQL Editor:</p>
+      <pre><code>CREATE ROLE tableau_reader LOGIN PASSWORD 'choose-a-strong-password';
+GRANT USAGE ON SCHEMA public TO tableau_reader;
+GRANT SELECT ON daily_stats TO tableau_reader;
+-- only if the dashboard needs the Query Explorer sheet:
+GRANT SELECT ON query_history TO tableau_reader;</code></pre>
+      <p>Then use <code>tableau_reader</code> and its password on the Tableau sign-in screen. Never give it access to the <code>user</code> table.</p>
     </section>
-
+ 
     <section class="doc-section" id="tableau-build">
       <h2 style="border-top:none;">Building the Dashboard</h2>
+      <p>The dashboard has seven small sheets. Each one is a single chart, card or table. Build them one at a time, then put them together on a dashboard.</p>
+      <h3>The sheets (from <code>query_history</code>)</h3>
       <div class="table-wrap"><table>
-        <tr><th>Sheet</th><th>Shows</th></tr>
-        <tr><td>Volume Over Time</td><td><code>stat_date</code> on Columns, <code>SUM(total_questions)</code> on Rows, line chart</td></tr>
-        <tr><td>Status Breakdown</td><td><code>generated_count</code>/<code>blocked_count</code>/<code>error_count</code> stacked bar, colored to match the app itself</td></tr>
-        <tr><td>Blocked Rate</td><td>Calculated field <code>SUM(blocked_count) / SUM(total_questions)</code>, formatted as a percentage</td></tr>
-        <tr><td>Unique Users</td><td><code>stat_date</code> on Columns, <code>SUM(unique_users)</code> on Rows, bar chart</td></tr>
+        <tr><th>Sheet</th><th>How to build it</th></tr>
+        <tr><td>Total Queries</td><td>Drag <strong>query_history (Count)</strong> onto <strong>Text</strong></td></tr>
+        <tr><td>Successful Queries</td><td>Make a calculated field <code>COUNTD(IF [Status] = "generated" THEN [Id] END)</code> and drag it onto <strong>Text</strong></td></tr>
+        <tr><td>Failed Queries</td><td>Make a calculated field <code>COUNTD(IF [Status] = "blocked" OR [Status] = "error" THEN [Id] END)</code> and drag it onto <strong>Text</strong></td></tr>
+        <tr><td>Users</td><td>Drag <strong>User Id</strong> onto <strong>Text</strong>, then right-click it and choose <strong>Measure → Count (Distinct)</strong></td></tr>
+        <tr><td>Queries per Day</td><td><strong>Created At</strong> (as <strong>Day</strong>) on Columns, <strong>query_history (Count)</strong> on Rows, mark type <strong>Bar</strong></td></tr>
+        <tr><td>Query Status</td><td><strong>Status</strong> on Columns and on <strong>Color</strong>, <strong>query_history (Count)</strong> on Rows and on <strong>Label</strong></td></tr>
+        <tr><td>Query Explorer</td><td>Put <strong>Id</strong>, <strong>Nl Question</strong>, <strong>Generated Sql</strong>, <strong>Status</strong> and <strong>Created At</strong> (exact date) on Rows. Sort by Id, highest first, and turn on <strong>Wrap text</strong></td></tr>
       </table></div>
-      <p>Matching the app's own status colors for visual consistency:</p>
-      <pre><code>generated_count -> #34d399
-blocked_count   -> #f87171
-error_count     -> #fbbf24</code></pre>
+      <h3>Putting it together</h3>
+      <ol>
+        <li>Click the <strong>New Dashboard</strong> icon, set the size to <strong>Fixed size, 1200 x 800</strong>, and name it <strong>Text-to-PostgreSQL Query Analytics</strong> (tick <strong>Show dashboard title</strong> to display it)</li>
+        <li>Drag the four card sheets across the top, the two charts side by side below them, and Query Explorer along the bottom</li>
+        <li>Click each chart and use the <strong>Use as Filter</strong> icon, so clicking a status or a day filters the table</li>
+      </ol>
+      <p>Matching the app's own status colors keeps the two looking alike:</p>
+      <pre><code>generated -> #34d399
+blocked   -> #f87171
+error     -> #fbbf24</code></pre>
+      <h3>Building from <code>daily_stats</code> instead</h3>
+      <p>If you connect to <code>daily_stats</code>, use these columns. There is no Query Explorer sheet, because the table has no question text.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Card or chart</th><th>Use</th></tr>
+        <tr><td>Total Queries</td><td><code>SUM(total_queries)</code></td></tr>
+        <tr><td>Successful, Blocked, Error</td><td><code>SUM(generated_queries)</code>, <code>SUM(blocked_queries)</code>, <code>SUM(error_queries)</code></td></tr>
+        <tr><td>Queries per Day</td><td><code>stat_date</code> on Columns, <code>SUM(total_queries)</code> on Rows</td></tr>
+        <tr><td>Failure rate</td><td><code>(SUM(blocked_queries) + SUM(error_queries)) / SUM(total_queries)</code>, shown as a percentage</td></tr>
+        <tr><td>Users per day</td><td><code>stat_date</code> on Columns, <code>SUM(unique_users)</code> on Rows</td></tr>
+      </table></div>
+      <div class="callout">
+        <code>unique_users</code> counts people <em>per day</em>. Adding several days together counts a returning person more than once, so use it for a daily chart, not as an overall "Users" number.
+      </div>
     </section>
 
+    
     <section class="doc-section" id="tableau-publish">
       <h2 style="border-top:none;">Refresh &amp; Publishing</h2>
       <div class="table-wrap"><table>

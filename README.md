@@ -6,8 +6,10 @@ For example, you type *"Who are the 5 highest paid employees?"* and the app give
 
 > **Important:** this app only *writes* the SQL. It never runs it. Your data is never touched.
 
-**Try it live:** [https://llm-text-to-sql-with-guardrails-app.onrender.com/] <br/>
-**Full guide:** open `user_guide_documentation.html` in your browser
+## **Try it live:** [https://llm-text-to-sql-with-guardrails-app.onrender.com/]
+## **Full guide:** open `user_guide_documentation-copy.html` in your browser
+
+<!-- Add a screenshot of the app here -->
 
 ---
 
@@ -19,7 +21,7 @@ It also checks every query before showing it, so nothing unsafe gets through. Th
 
 ## What can it do?
 
-- Turn your question into SQL (PostgreSQL language only), on any topic
+- Turn your question into SQL, on any topic
 - Use an AI model on your own computer, and switch to another AI (OpenAI, Claude or Gemini) if the first one is not working
 - Check every query for safety before showing it
 - Let people sign up with an email and password, or with their Google account
@@ -83,13 +85,19 @@ user_guide_documentation.html   The full step-by-step guide
 
 ### What you need first
 
-- Python 3.10 or newer
+- Python 3.12 or newer
 - Git
 - A free [Neon](https://neon.tech) database
 - Optional: [LM Studio](https://lmstudio.ai) for a free AI on your own computer, or a key for OpenAI, Claude or Gemini
 
+### Step 1: Get the code
 
-### Step 1: Make a private space for the packages
+```bash
+git clone https://github.com/MK5843/llm-text-to-sql-with-guardrails-app-copy.git
+cd llm-text-to-sql-with-guardrails-app-copy
+```
+
+### Step 2: Make a private space for the packages
 
 ```bash
 python -m venv venv
@@ -99,13 +107,13 @@ source venv/Scripts/activate
 On Mac or Linux, use `source venv/bin/activate` instead.
 When it works, you will see `(venv)` at the start of the line.
 
-### Step 2: Install the packages
+### Step 3: Install the packages
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 3: Fill in your settings
+### Step 4: Fill in your settings
 
 Copy the example settings file:
 

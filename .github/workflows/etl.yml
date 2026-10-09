@@ -27,26 +27,5 @@ jobs:
 
       - name: Run ETL
         env:
-          DATABASE_URL: ${{ secrets['DATABASE_URL'] }}
+          DATABASE_URL: ${{ secrets['DATABASE_URL'] }} # or use ${{ secrets.DATABASE_URL }} if you prefer
         run: python etl_daily_stats.py
-
-      # ---- OLD (commented out) ----
-      # - name: Install dependencies
-      #   run: pip install sqlalchemy psycopg2-binary python-dotenv
-      #
-      # - name: Run ETL
-      #   env:
-      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      #   run: python etl_daily_stats.py
-      #
-      # - name: Install dependencies
-      #   run: pip install sqlalchemy "psycopg[binary]" python-dotenv
-      #
-      # - name: Install dependencies
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     python -m pip install sqlalchemy "psycopg[binary]" python-dotenv
-      #     python -m pip list
-      #
-      # - name: Check driver
-      #   run: python -c "import psycopg; print('psycopg OK', psycopg.__version__)"
